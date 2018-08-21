@@ -27,7 +27,10 @@ class CaptchaHandler:
         self.__screenshot(broweser)
         image = self.__get_file_content('../code.png')
         result = self.client.basicGeneral(image)
-        return result['words_result'][0]['words']
+        try:
+            return result['words_result'][0]['words']
+        except Exception:
+            return ''
 
     # 截图
     def __screenshot(self, browser):
