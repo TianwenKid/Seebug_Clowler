@@ -82,12 +82,12 @@ def downurl(url):
 workbook = xlwt.Workbook()
 keywords_list = cf.get('seebug', 'keywords_list').split(',')
 for item in keywords_list:
-    global col_count
+    flag = True # 是否爬取下一页的标记
     last_vvid = ''
     col_count = 0
     sheet = workbook.add_sheet(item)
     page_num = 1
-    while True:
+    while flag:
         # 待爬取的url
         url = 'https://www.seebug.org/search/?keywords=%s&category=&has_poc=true&page=%s&level=all' % (item, str(page_num))
         # 启动浏览器并获取网页源代码
@@ -104,17 +104,20 @@ for item in keywords_list:
                 if 'ssvid' in href['href']:
                     title = href['title']
                     # 记录当前组件爬取的第一个漏洞
+                    print(href['href'].split('/')[-1])
                     if last_vvid == '':
                         last_vvid = href['href'].split('/')[-1]
+
                     # 若即将打开的url为上次爬取的最后一个url，则验证下一个组件
                     if keywords_last_ssvid[item] in href['href']:
                         keywords_last_ssvid[item] = last_vvid
-                        break
+                        flag = False    # 不爬取下一页
+                        break   # 不爬取当前页的后续漏洞
                     crawlurl = "https://www.seebug.org%s" % (href['href'])
                     downurl(crawlurl)
             except:
                 pass
-
         page_num = page_num + 1
 
-
+    cf.set('seebug', 'keywords_last_ssvid', str(keywords_last_ssvid))
+    cf.write(open('../seebug.cfg', 'w'))
